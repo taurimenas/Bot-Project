@@ -8,6 +8,10 @@ namespace Bot
     {
         public int testNumber = 5;
         
+        public Db()
+        {
+
+        }
         public Db(List<string> titles, List<string> topRatings, List<string> imdbRatings, List<string> dates)
         {
 
