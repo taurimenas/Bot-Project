@@ -7,42 +7,26 @@ using System.Threading.Tasks;
 namespace Bot
 {
     public class MovieDb
+    {
+        public List<Movie> Movies = new List<Movie>();
+        public MovieDb(List<Movie> movies)
         {
-        public int MovieId { get; set; }
-        public string MovieTitle { get; set; }
-        public string TopRating { get; set; }
-        public string ImdbRating { get; set; }
-        public string ReleaseYear { get; set; }
-        
-
-        public MovieDb(string MovieTitle, string TopRating, string ImdbRating, string ReleaseYear)
-        {
-            this.MovieTitle = MovieTitle;
-            this.TopRating = TopRating;
-            this.ImdbRating = ImdbRating;
-            this.ReleaseYear = ReleaseYear;
-        }
-        public MovieDb(int MovieId, string MovieTitle, string TopRating, string ImdbRating, string ReleaseYear)
-        {
-            this.MovieId = MovieId;
-            this.MovieTitle = MovieTitle;
-            this.TopRating = TopRating;
-            this.ImdbRating = ImdbRating;
-            this.ReleaseYear = ReleaseYear;
+            Movies = movies;
         }
         public void AddData()
         {
             using (var db = new MovieContext())
             {
-                var movie = new Movie { MovieTitle = this.MovieTitle, ImdbRating = this.ImdbRating, ReleaseYear = this.ReleaseYear, TopRating = this.ReleaseYear};
-                db.Movies.Add(movie);
-                db.SaveChanges();
-
+                for (int i = 0; i < 250; i++)
+                {
+                    var movie = new Movie { MovieTitle = Movies[i].MovieTitle, ImdbRating = Movies[i].ImdbRating, ReleaseYear = Movies[i].ReleaseYear, TopRating = Movies[i].TopRating };
+                    db.Movies.Add(movie);
+                    db.SaveChanges();
+                }
             }
         }
     }
-
-    }
+}
 
 
 
