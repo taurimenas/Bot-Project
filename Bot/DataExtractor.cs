@@ -19,9 +19,9 @@ namespace Bot
                 Headless = false
             });
             var page = await browser.NewPageAsync();
-            await page.GoToAsync("https://www.imdb.com/chart/top/?ref_=nv_mv_250");
+            await page.GoToAsync("https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm");
 
-            for (int i = 1; i <= 250; i++)
+            for (int i = 1; i <= 100; i++)
             {
                 Movie movie = new Movie
                 {
@@ -29,10 +29,11 @@ namespace Bot
                 };
                 Movies.Add(movie);
             }
-                await GetDataFromWeb(page, "> td.titleColumn > a", MovieParameter.MovieTitle);
-                await GetDataFromWeb(page, "> td.titleColumn > span", MovieParameter.ReleaseYear);
+            await GetDataFromWeb(page, "> td.titleColumn > a", MovieParameter.MovieTitle);
+            await GetDataFromWeb(page, "> td.titleColumn > div", MovieParameter.TopRating);
+            await GetDataFromWeb(page, "> td.titleColumn > span", MovieParameter.ReleaseYear);
                 await GetDataFromWeb(page, "> td.ratingColumn.imdbRating > strong", MovieParameter.ImdbRating);
-                await GetDataFromWeb(page, "", MovieParameter.TopRating);
+                //await GetDataFromWeb(page, "", MovieParameter.TopRating);
 
             foreach (var item in Movies)
             {
@@ -41,20 +42,35 @@ namespace Bot
         }
         private async Task GetDataFromWeb(Page page, string selectorEnding, MovieParameter parameter)
         {
-            string result;
-            for (int i = 1; i <= 250; i++)
+            string result = "";
+            for (int i = 1; i <= 100; i++)
             {
                 if (parameter == MovieParameter.TopRating)
                 {
-                    var imdbCard = await page.WaitForXPathAsync($"//*[@id=\"main\"]/div/span/div/div/div[3]/table/tbody/tr[{i}]/td[2]/text()");
-                    var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
-                    result = Regex.Replace(extractedData, @"\s+", string.Empty);
+                    try
+                    {
+                        var imdbCard = await page.WaitForXPathAsync($"//*[@id=\"main\"]/div/span/div/div/div[3]/table/tbody/tr[{i}]/td[2]/text()");
+                        var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
+                        result = Regex.Replace(extractedData, @"\s+", string.Empty);
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine($"No {parameter}.");
+                    }
                 }
                 else
                 {
-                    var imdbCard = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}){selectorEnding}");
-                    var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
-                    result = extractedData.Replace("(", "").Replace(")", "");
+                    try
+                    {
+                        var imdbCard = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}){selectorEnding}");
+                        var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
+                        result = extractedData.Replace("(", "").Replace(")", "");
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine($"No {parameter}.");
+                    }
+                    
                 }
                 switch (parameter)
                 {
