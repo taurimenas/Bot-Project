@@ -3,23 +3,16 @@ using System.Threading.Tasks;
 using PuppeteerSharp;
 using System.Threading;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Bot
 {
     class DataExtractor
     {
-        public List<string> Titles { get; set; }
-        public List<string> TopRatings { get; set; }
-        public List<string> ImdbRatings { get; set; }
-        public List<string> Dates { get; set; }
+        public List<Movie> Movies { get; private set; } = new List<Movie>();
 
         public async Task ExtractData()
         {
-            Titles = new List<string>();
-            TopRatings = new List<string>();
-            ImdbRatings = new List<string>();
-            Dates = new List<string>();
-
             await new BrowserFetcher().DownloadAsync(BrowserFetcher.DefaultRevision);
             var browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
@@ -28,29 +21,65 @@ namespace Bot
             var page = await browser.NewPageAsync();
             await page.GoToAsync("https://www.imdb.com/chart/top/?ref_=nv_mv_250");
 
-
             for (int i = 1; i <= 250; i++)
             {
-                var imdbCard2 = await page.WaitForXPathAsync($"//*[@id=\"main\"]/div/span/div/div/div[3]/table/tbody/tr[{i}]/td[2]/text()");
-                var extractedData2 = await imdbCard2.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard2);
-                TopRatings.Add(extractedData2);
-                //Console.WriteLine(topRatings[i - 1]);
-
-                var imdbCard4 = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}) > td.titleColumn > a");
-                var extractedData4 = await imdbCard4.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard4);
-                Titles.Add(extractedData4);
-                //Console.WriteLine(Titles[i - 1]);
-
-                var imdbCard1 = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}) > td.titleColumn > span");
-                var extractedData1 = await imdbCard1.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard1);
-                Dates.Add(extractedData1);
-                //Console.WriteLine(dates[i - 1]);
-
-                var imdbCard3 = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}) > td.ratingColumn.imdbRating > strong");
-                var extractedData3 = await imdbCard3.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard3);
-                ImdbRatings.Add(extractedData3);
-                //Console.WriteLine(imdbRatings[i - 1]);
+                Movie movie = new Movie
+                {
+                    MovieId = i
+                };
+                Movies.Add(movie);
             }
+                await GetDataFromWeb(page, "> td.titleColumn > a", MovieParameter.MovieTitle);
+                await GetDataFromWeb(page, "> td.titleColumn > span", MovieParameter.ReleaseYear);
+                await GetDataFromWeb(page, "> td.ratingColumn.imdbRating > strong", MovieParameter.ImdbRating);
+                await GetDataFromWeb(page, "", MovieParameter.TopRating);
+
+            foreach (var item in Movies)
+            {
+                item.PrintMovie();
+            }
+        }
+        private async Task GetDataFromWeb(Page page, string selectorEnding, MovieParameter parameter)
+        {
+            string result;
+            for (int i = 1; i <= 250; i++)
+            {
+                if (parameter == MovieParameter.TopRating)
+                {
+                    var imdbCard = await page.WaitForXPathAsync($"//*[@id=\"main\"]/div/span/div/div/div[3]/table/tbody/tr[{i}]/td[2]/text()");
+                    var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
+                    result = Regex.Replace(extractedData, @"\s+", string.Empty);
+                }
+                else
+                {
+                    var imdbCard = await page.WaitForSelectorAsync($"#main > div > span > div > div > div.lister > table > tbody > tr:nth-child({i}){selectorEnding}");
+                    var extractedData = await imdbCard.EvaluateFunctionAsync<string>("t => t.textContent", imdbCard);
+                    result = extractedData.Replace("(", "").Replace(")", "");
+                }
+                switch (parameter)
+                {
+                    case MovieParameter.ImdbRating:
+                        Movies[i-1].ImdbRating = result;
+                        break;
+                    case MovieParameter.MovieTitle:
+                        Movies[i-1].MovieTitle = result;
+                        break;
+                    case MovieParameter.ReleaseYear:
+                        Movies[i-1].ReleaseYear = result;
+                        break;
+                    case MovieParameter.TopRating:
+                        Movies[i-1].TopRating = result;
+                        break;
+                }
+            }
+        }
+        public enum MovieParameter
+        {
+            MovieId,
+            MovieTitle,
+            TopRating,
+            ImdbRating,
+            ReleaseYear
         }
     }
 }
