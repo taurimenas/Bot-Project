@@ -9,9 +9,7 @@ namespace Bot
     {
         static async Task Main()
         {
-            DataExtractor dataExtractor = new DataExtractor();
-            await dataExtractor.ExtractData();
-            List<Movie> Movies = dataExtractor.Movies;
+            List<Movie> Movies = await DataExtractor.ExtractData();
             MovieDb movieDb = new MovieDb(Movies);
             movieDb.AddData();
             var orderByRating = Movies.OrderBy(x => x.ImdbRating);

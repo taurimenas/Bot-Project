@@ -9,9 +9,9 @@ namespace Bot
 {
     class DataExtractor
     {
-        public List<Movie> Movies { get; private set; } = new List<Movie>();
+        private static readonly List<Movie> movies = new List<Movie>();
 
-        public async Task ExtractData()
+        public static async Task<List<Movie>> ExtractData()
         {
             await new BrowserFetcher().DownloadAsync(BrowserFetcher.DefaultRevision);
             var browser = await Puppeteer.LaunchAsync(new LaunchOptions
@@ -34,8 +34,9 @@ namespace Bot
                     TopRating = propertyList[2],
                     ImdbRating = propertyList[4]
                 };
-                Movies.Add(movie);
+                movies.Add(movie);
             }
+            return movies;
         }
     }
 }
