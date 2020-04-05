@@ -1,12 +1,19 @@
-﻿namespace Bot
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Bot
 {
     public class Movie
     {
-        public int MovieId { get; set; }
-        public string MovieTitle { get; set; }
+        [Key]
         public string TopRating { get; set; }
+        public string MovieTitle { get; set; }
         public string ImdbRating { get; set; }
         public string ReleaseYear { get; set; }
+        public static DateTime Now { get; }
+
+
+
 
         public Movie()
         {
@@ -18,7 +25,7 @@
         }
         public override string ToString()
         {
-            return $"Id: {MovieId} Rank: {TopRating} Title: {MovieTitle} Year: {ReleaseYear} Rating: {ImdbRating} ";
+            return $"Rank: {TopRating} Title: {MovieTitle} Year: {ReleaseYear} Rating: {ImdbRating} Date: {Now}";
         }
     }
 

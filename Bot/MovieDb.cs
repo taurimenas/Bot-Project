@@ -17,7 +17,7 @@ namespace Bot
         {
             using (var db = new MovieContext())
             {
-                for (int i = 0; i < 250; i++)
+                for (int i = 0; i < 100; i++)
                 {
                     var movie = new Movie { MovieTitle = Movies[i].MovieTitle, ImdbRating = Movies[i].ImdbRating, ReleaseYear = Movies[i].ReleaseYear, TopRating = Movies[i].TopRating };
                     db.Movies.Add(movie);
